@@ -6,6 +6,7 @@ const financeSchema = new Schema(
     description: { type: String, required: true },
     value: { type: Number },
     type: { type: String, enum: ["expense", "income"] },
+    date: { type: Date },
   },
   {
     timestamps: true,
