@@ -1,24 +1,26 @@
 import React, { useRef, useState } from "react";
 import axios from "axios";
-function CreationInput({ getFinances }) {
+function CreationInput({ getFinances, handleUpdate }) {
   const ref = useRef();
   const currentDate = new Date();
+  const dateString = `${currentDate.getFullYear()}-${
+    currentDate.getMonth() + 1
+  }-${currentDate.getDate()}`;
   const [description, setDescription] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState("expense");
-  const [date, setDate] = useState(currentDate.toLocaleDateString());
+  const [date, setDate] = useState(dateString);
   function handleCreation() {
-    console.log(date.split("-")[1]);
     let fixedDate = new Date(
       date.split("-")[0],
       date.split("-")[1] - 1,
       date.split("-")[2]
     );
-    console.log(fixedDate);
     let obj = { description, value, type, date: fixedDate.toISOString() };
     axios.post("http://localhost:3001/finance/create", obj).then((res) => {
       resetState();
       getFinances();
+      handleUpdate();
     });
   }
   function resetState() {

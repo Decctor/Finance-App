@@ -1,7 +1,13 @@
 const router = require("express").Router();
 const Finance = require("../models/finance.model");
 router.post("/create", (req, res) => {
-  let newFinance = new Finance({ ...req.body });
+  let value;
+  if (req.body.type == "expense") {
+    value = -req.body.value;
+  } else {
+    value = req.body.value;
+  }
+  let newFinance = new Finance({ ...req.body, value: value });
   newFinance
     .save()
     .then((finance) => res.json(finance))
@@ -14,53 +20,61 @@ router.delete("/delete/:id", (req, res) => {
   const id = req.params.id;
   Finance.findByIdAndDelete(id).then(res.send("Removido com sucesso."));
 });
-router.get("/getTotal", async (req, res) => {
-  /*     {
-      $project: {
+router.get("/get/total/liquid/:id", async (req, res) => {
+  let currentMonth = req.params.id;
+  let aggregatedByMonth = await Finance.aggregate([
+    {
+      $addFields: {
         month: { $month: "$date" },
-        type: { $type: "$type" },
-        value: 1,
       },
     },
     {
-      $group: {
-        _id: { month: "$month", type: "$type" },
-        total: { $sum: "$value" },
-      },
-    }, */
-
-  /*    {
-      $match: { type: "expense" },
-    },
-    {
-      $group: {
-        _id: { $month: "$date" },
-        total: { $sum: "$value" },
-      },
-    },*/
-  let expenses = await Finance.aggregate([
-    {
-      $match: { type: "expense" },
-    },
-    {
-      $group: {
-        _id: { $month: "$date" },
-        total: { $sum: "$value" },
-      },
+      $group: { _id: "$month", total: { $sum: "$value" } },
     },
   ]);
-  let incomes = await Finance.aggregate([
+  let currentMonthTotal = aggregatedByMonth.filter(
+    (month) => month._id == currentMonth
+  );
+  res.json(currentMonthTotal);
+});
+router.get("/get/total/income/:id", async (req, res) => {
+  let currentMonth = req.params.id;
+  let aggregatedByMonth = await Finance.aggregate([
+    {
+      $addFields: {
+        month: { $month: "$date" },
+      },
+    },
     {
       $match: { type: "income" },
     },
     {
-      $group: {
-        _id: { $month: "$date" },
-        total: { $sum: "$value" },
-      },
+      $group: { _id: "$month", total: { $sum: "$value" } },
     },
   ]);
-
-  res.json(expenses);
+  let currentMonthTotal = aggregatedByMonth.filter(
+    (month) => month._id == currentMonth
+  );
+  res.json(currentMonthTotal);
+});
+router.get("/get/total/expenses/:id", async (req, res) => {
+  let currentMonth = req.params.id;
+  let aggregatedByMonth = await Finance.aggregate([
+    {
+      $addFields: {
+        month: { $month: "$date" },
+      },
+    },
+    {
+      $match: { type: "expense" },
+    },
+    {
+      $group: { _id: "$month", total: { $sum: "$value" } },
+    },
+  ]);
+  let currentMonthTotal = aggregatedByMonth.filter(
+    (month) => month._id == currentMonth
+  );
+  res.json(currentMonthTotal);
 });
 module.exports = router;

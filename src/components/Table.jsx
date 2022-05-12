@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { BsFillTrashFill } from "react-icons/bs";
 import axios from "axios";
-function Table({ getFinances, finances }) {
+function Table({ getFinances, finances, handleUpdate }) {
   useEffect(() => {
     getFinances();
   }, []);
   function deleteFinance(id) {
     axios.delete(`http://localhost:3001/finance/delete/${id}`).then((res) => {
       getFinances();
+      handleUpdate();
     });
   }
   return (
@@ -25,7 +26,11 @@ function Table({ getFinances, finances }) {
           className="grid grid-cols-9 mt-2 pt-2 border-t border-gray-200 grid-rows-1"
         >
           <h1 className=" text-sm col-span-2">{finance.description}</h1>
-          <h1 className=" text-sm col-span-2">R${finance.value.toFixed(2)}</h1>
+          <h1 className=" text-sm col-span-2">
+            {finance.value < 0
+              ? `- R$${Math.abs(finance.value).toFixed(2)}`
+              : `R$${finance.value.toFixed(2)}`}
+          </h1>
           {finance.type == "expense" ? (
             <h1 className="text-sm col-span-2 text-red-400">Despesa</h1>
           ) : (
